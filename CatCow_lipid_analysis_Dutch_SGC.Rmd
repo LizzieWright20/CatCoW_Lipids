@@ -1,0 +1,183 @@
+---
+title: "CatCow Lipid Analysis - Dutch SGC"
+author: "LW"
+date: "22/11/2024"
+output: html_document
+---
+
+Import data from summary sheet (link here).
+
+https://docs.google.com/spreadsheets/d/121lVA7w2d5MKc5Vvm4d0aR5vaLV4ChfMM-Eh2qYxYJA/edit#gid=793877156
+
+
+```{r,echo=FALSE}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(googlesheets4)
+
+## Read data from google sheet
+gs4_deauth()
+Data <-read_sheet(ss="https://docs.google.com/spreadsheets/d/121lVA7w2d5MKc5Vvm4d0aR5vaLV4ChfMM-Eh2qYxYJA/edit#gid=793877156", sheet="SGC summary sheet for R")
+
+## Load colour pallet for plots
+cbPalette <- c("#56B4E9", "#D55E00", "#009E73", "#CC79A7", "#F0E442","#0072B2","#E69F00","#999999","white","#000000")
+
+
+```
+
+
+Import data from elipses - here we've used the Western Baltic reference dataset (Dmirci et al 2020).  
+https://https://docs.google.com/spreadsheets/d/1Ef8OPBV7xHSp1Alw470VgXoghBRv-Iv09aTHqGafafg/edit#gid=0
+
+
+Then create a nice base plot with ggplot using these data to make ellipses.   
+
+```{r}
+#Call reference data from google sheets
+ModernISO <- read_sheet(ss = "1Ef8OPBV7xHSp1Alw470VgXoghBRv-Iv09aTHqGafafg")
+
+Plot <-ggplot() +
+  labs(x=expression(delta^{13}*C[16:0]*"(\u2030)"), y=expression(delta^{13}*C[18:0]*"(\u2030)"))+
+  scale_x_continuous(position="top", limits=c(-40,-15))+
+  scale_y_continuous(position = "right",limits=c(-40,-15))+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  theme(axis.ticks.length=unit(-0.2,"cm"))+
+  theme(plot.title=element_text(hjust=0.5, family = "Times New Roman"))+
+  theme(axis.text=element_text(size=12),
+        axis.title = element_text(size=12),
+        axis.text.x.top = element_text(margin = margin(b = 8)),
+        axis.title.x.top = element_text(margin = margin(t=10, b=15)),
+        axis.text.y.right = element_text(margin = margin(l= 8)),
+        axis.title.y.right = element_text(margin = margin(l=15)),
+        title = element_text(size=16)) +
+  guides(color=FALSE, shape=FALSE)+
+  annotate("text", label = "Marine", x = -24, y = -20, size = 3, colour = "black")+ 
+  #annotate("text", label = "Freshwater", x = -38, y = -34, size = 3, colour = "black")+ 
+  annotate("text", label = "Porcine", x = -28, y = -24, size = 3, colour = "black")+ 
+  #annotate("text", label = "Ruminant", x = -30, y = -29, size = 3, colour = "black")+ 
+  annotate("text", label = "Ruminant", x = -31, y = -34, size = 3, colour = "black")+ 
+  annotate("text", label = "Dairy", x = -26, y = -33, size = 3, colour = "black")+
+  annotate("text", label = "Freshwater", x = -36, y = -32, size = 3, colour = "black")+
+  stat_ellipse(geom= "polygon", data=ModernISO, level=0.68,alpha=0.2, aes (x=d13C16, y= d13C18, group=Class))+
+  coord_fixed(ratio = 1)
+Plot
+```
+
+
+Now plot your data on these plot using ggplot. 
+
+```{r}
+
+p <- Plot + geom_point(data=Data, aes(y=d13C18,x=d13C16, fill = Site), colour="black", alpha =0.7, pch=21, size=2)+
+  scale_fill_manual(name="Site", breaks=c("Keinsmerbrug","Mienakker","Zeewijk"), values=c("#000000","#999999","#56B4E9"), labels=c("Keinsmerbrug", "Mienakker", "Zeewijk"))+
+  theme(legend.text=element_text(size=12))+
+  #theme(legend.position = c(0.7, 0.2))+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+p
+```
+
+
+Looks good - maybe investigate vs. lipid concentration
+
+```{r}
+p <- Plot + geom_point(data=Data, aes(y=d13C18,x=d13C16, fill = Site, size = Concentration), colour="black", alpha =0.7, pch=21)+
+  scale_fill_manual(name="Site", breaks=c("Keinsmerbrug","Mienakker","Zeewijk"), values=c("#000000","#999999","#56B4E9"), labels=c("Keinsmerbrug", "Mienakker", "Zeewijk"))+
+  theme(legend.text=element_text(size=12))+
+  #theme(legend.position = c(0.7, 0.2))+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+p
+```
+
+ Need to look at  APAA data. 
+
+Big D 
+- not sure what's going on with all the error messagesbut it still makes the graph
+
+```{r}
+plot_curv <-ggplot()+
+  #geom_line(aes(x=az, y=ay), linetype = "dashed") +
+  #geom_point (aes(x=az, y=ay)) +
+  #geom_line(aes(x=bz, y=by), linetype = "dashed") +
+  #geom_point (aes(x=bz, y=by)) +
+  #geom_line(aes(x=cz, y=cy), linetype = "dashed") +
+  #geom_point (aes(x=cz, y=cy)) +
+  #geom_line(aes(x=dz, y=dy), linetype = "dashed") +
+  #geom_point (aes(x=dz, y=dy)) +
+  #geom_line(aes(x=ez, y=ey), linetype = "dashed") +
+  #geom_point (aes(x=ez, y=ey)) +
+  #geom_line(aes(x=fz, y=fy), linetype = "dashed") +
+  #geom_point (aes(x=fz, y=fy)) +
+  labs(x=expression(delta^{13}*C[16:0]*" (\u2030)"),y=expression(Delta^{13}*C*" (\u2030)"))+
+  scale_y_continuous(position = "right", breaks = seq(-6, 4, by=2), expand = c(0, 0))+
+  scale_x_continuous(position = "top", breaks = seq(-36, -20, by=2), expand = c(0, 0))+
+  coord_cartesian(xlim = c(-36, -20), ylim = c(-6, 4), clip = "off")+
+  expand_limits(x=0, y=0)+
+  theme(
+    aspect.ratio = 1,
+    panel.background = element_blank(),
+    legend.background = element_blank(),
+    plot.margin = margin(.5,.5,.5,.5, "cm"),
+    text = element_text(size=10),
+    axis.text.x.top = element_text(size = 10, colour="black", margin = unit(c(0, 0, .15, 0), "cm"), hjust = 0.64),
+    axis.text.y.right = element_text(size = 10, colour = "black", margin = unit(c(0, 0, 0, .15), "cm"), vjust = 0.3),
+    axis.ticks = element_line(color = "black", size = .5),
+    axis.line = element_line(color="black", size = 0.5),
+    axis.title.x.top = element_text(size = 10, colour = "black", vjust=1),
+    axis.title.y.right = element_text(size = 10, colour = "black", vjust=1),
+    legend.position="bottom",
+    legend.key = element_rect(fill = NA, color = NA))+
+  geom_hline(yintercept = -3.10, linetype="dashed")+ 
+  #geom_hline(yintercept = -2.45, linetype="dashed")+
+  theme(text=element_text(family= "Arial")) +
+  annotate("text", x=-35, y=-4.75, label= "Ruminant\nDairy", size=3, angle=90) +
+  annotate("text", x=-35, y=-2.15, label= "Ruminant", size=3, angle=90) +
+  annotate("text", x=-35, y=1.7, label= "Non-Ruminant", size=3, angle=90)
+  #annotate("text", x=-22, y=1, label= "Marine", size=5) +
+  #annotate("text", x=-31, y=-2.5, label= "Ruminant", size=3)+
+  #annotate("text", x=-16, y=1, label= "Maize", size=5)+
+  #annotate("text", x=-32, y=1, label= "C3\nPlant", size=3)+
+  #annotate("text", x=-28, y=1, label= "Freshwater", size=3)+
+  #annotate("text", x=-28, y=1.75, label= "Non-Ruminant", size=3)
+#stat_ellipse(geom= "path", data=Maize_mix_BigD, level = 0.68, aes (x=d13C16, y= BigD, group=Class), size=0.1)
+plot_curv
+```
+
+Add data
+
+```{r}
+plot_bigD <- plot_curv + geom_point(data= Data, aes(x = d13C16, y = bigD, fill = Site), colour="black", alpha =0.7, pch=21, size=3) + 
+        scale_fill_manual(name="Site", 
+breaks=c("Keinsmerbrug","Mienakker","Zeewijk"), 
+values=c("#000000","#999999","#56B4E9"), 
+labels=c("Keinsmerbrug","Mienakker","Zeewijk"))+
+  #scale_fill_manual(values=c("#000000","#999999","#56B4E9")) + #colores del Env
+        #scale_starshape_manual(values=c(1, 5, 11, 23, 29)) +  #formas Use
+        geom_abline(intercept=-1 ,slope= 1, linetype="dashed") 
+
+plot_bigD
+```
+
+
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
